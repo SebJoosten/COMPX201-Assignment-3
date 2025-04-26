@@ -10,6 +10,7 @@ public class StrHashTableCollisions {
 
     private boolean printCount = false;
     private boolean printHash = false;
+    private boolean printDelete = false;
 
 
 
@@ -66,34 +67,48 @@ public class StrHashTableCollisions {
 
     }
 
-    // BROKEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // WORKING
     /**
      * This is to remove a key and value paring from the hash table
      * @param k - The kay associated with the value you want to remove
      */
     public void delete (String k){
 
-        int hash = hashFunction(k  );
+        int hash = hashFunction(k);
         node read = table[hash];
-        k = k.toLowerCase().trim();
-
 
         if (read != null){
 
-            node prev ;
+            k = k.toLowerCase().trim();
+            node prev = null;
+
             while (read != null) {
-                String compare = read.getKey().toLowerCase().trim();
-                if (compare.equals(k)) {
 
-                    System.out.println("WE FOUND IT NOW REMOVE IT ");
+                // Compare k to a current node key
+                if (read.getKey().toLowerCase().trim().equals(k)) {
+                    numElements--;
 
+                    // Node is head
+                    if (prev == null) {
+                        table[hash] = read.next;
+                        if (printDelete) System.out.println("Removed (head) " + k + " from table");
+                    // Node is middle or end
+                    } else {
+                        prev.next = read.next;
+                        if (printDelete) {
+                            System.out.println("Removed (in between) "
+                                                +   ((read.next == null) ? "next NULL" : "next TRUE")
+                                                +   " " + k + " from table");
+                        }
+                    }
+                    break; // Leave the loop
                 }
+
+                // Move to next if not found
                 prev = read;
                 read = read.next;
             }
-
         }
-
     }
 
     // WORKING
@@ -187,13 +202,14 @@ public class StrHashTableCollisions {
      */
     public boolean contains(String k){
 
-        System.out.println("contains");
+
         if (k == null){
             System.out.println("**    ERROR: No key input    **");
             System.out.println("contains()  Nothing to look for");
             return false;
         }
 
+        //System.out.println("contains for: " + k);
         int hash = hashFunction(k  );
         node read = table[hash];
         k = k.toLowerCase().trim();

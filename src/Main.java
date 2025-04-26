@@ -48,15 +48,19 @@ public class Main {
 
         System.out.println(sth2.contains("dog"));
 
-        sth2.insertRandomLengeth(10000);
+        sth2.dump();
+
+        sth2.addRemoveRandom(50);
 
         sth2.dump();
 
+        sth2.addRemoveRandom(50);
+        sth2.addRemoveRandom(10);
 
-        System.out.println(sth2.contains("dog"));
-        System.out.println(sth2.contains("NOT dog"));
-        System.out.println(sth2.getValues("dog"));
+        sth2.dump();
 
+        sth2.addRemoveRandom(50);
+        sth2.dump();
 
 
     }

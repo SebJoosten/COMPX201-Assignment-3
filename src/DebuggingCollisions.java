@@ -21,6 +21,7 @@ public class DebuggingCollisions {
             pairData.add(newPair);
         }
 
+
         public kvPAIR<K,V> key(int index){
             return pairData.get(index);
         }
@@ -64,22 +65,24 @@ public class DebuggingCollisions {
             String value = getRandomString(100);
             pairStorage.addPair(key, value);
 
-            test.insert(getRandomString(10), getRandomString(100));
+            test.insert(key, value);
         }
-
-        test.dump();
 
         // Shuffle then remove from table
         int count = 0;
         Collections.shuffle(pairStorage.pairData);
+
         for (int j = 0; j < pairStorage.pairData.size(); j++) {
-            if (!test.contains(pairStorage.pairData.get(j).key)) {
+            String key = pairStorage.pairData.get(j).key;
+            if (!test.contains(key)) {
                 count++;
+                System.out.println("Failed: " + key);
             }
-            test.delete(pairStorage.pairData.get(j).key);
+            System.out.println("Delete:  " + key);
+            test.delete(key);
+
         }
         pairStorage.pairData.clear();
-        test.dump();
 
         System.out.println("There are " + count + " failed");
 
@@ -132,6 +135,10 @@ public class DebuggingCollisions {
 
     public String getValues(String key){
         return test.getString(key);
+    }
+
+    public void delete(String key){
+        test.delete(key);
     }
 
     public void insertTable(StrHashTableCollisions table){
