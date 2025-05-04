@@ -13,6 +13,7 @@ public class StrHashTable {
     private int numElements;
     private int startingSize = 16;
     private double capacity = 0.8;
+    private boolean reHashDump = false;
 
 
 
@@ -39,13 +40,6 @@ public class StrHashTable {
 
         if (key != null && value != null) {
 
-            // Check if key already exists before rehashing
-            if (contains(key)) {
-                System.out.println("ERROR: Key already exists");
-                System.out.println("**    Nothing added    **");
-                return;
-            }
-
             // Check if the table has space (capacity exceeds 80%)
             if ((double) numElements / table.length >= capacity) {
                 System.out.println("ERROR: Capacity exceeded");
@@ -67,7 +61,6 @@ public class StrHashTable {
             System.out.println("****     Nothing added     ****");
         }
 
-
     }
 
     /**
@@ -80,6 +73,7 @@ public class StrHashTable {
         if (k != null && contains(k)) {
             table[hashFunction(k)] = null;
             System.out.println("--> " + k + " Was successfully deleted");
+            numElements--;
             return;
         }
 
@@ -137,21 +131,20 @@ public class StrHashTable {
 
         numElements = 0;
 
+        if(reHashDump){dump();}
+
         // Set up temp table and new table doubles the size
         node[] temp = table;
-        node[] newTable = new node[table.length*2];
+        table = new node[table.length*2];
 
         // Move all the content this will ignore doubles
         for(node n : temp){
             if(n != null){
-                newTable[hashFunction(n.getKey())] = n;
-                numElements++;
-            }else{
-                System.out.println("Double in re hash");
+                insert(n.key, n.value);
             }
         }
 
-        table = newTable;
+        if(reHashDump){dump();}
 
     }
 
@@ -202,7 +195,7 @@ public class StrHashTable {
     public boolean isEmpty(){
 
         // Re calculate num elements
-        return size() == 0;
+        return count() == 0;
 
     }
 
@@ -210,12 +203,13 @@ public class StrHashTable {
      * A super simple look to count the current occupied elements
      * @return The number of elements stored
      */
-    public int size(){
+    public int count(){
 
         int count = 0;
         for(node t : table){
             if (t != null) count++;
         }
+        numElements = count;
         return count;
 
     }
