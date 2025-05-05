@@ -273,7 +273,7 @@ public class StrHashTableCollisions {
     public boolean isEmpty(){
 
         // Re calculate num elements
-        return size() == 0;
+        return count() == 0;
 
     }
 
@@ -282,7 +282,7 @@ public class StrHashTableCollisions {
      * A super simple look to count the current occupied elements
      * @return The number of elements stored
      */
-    public int size(){
+    public int count(){
 
         int count = 0;
         for(StrHashTableCollisions.node t : table){
@@ -322,7 +322,7 @@ public class StrHashTableCollisions {
         }
 
         System.out.println("Size: " + table.length );
-        System.out.println("Entries: " + size() + "Internal counter " + numElements);
+        System.out.println("Entries: " + count() + "Internal counter " + numElements);
         double capacity = (Math.round((((double) numElements / table.length) * 100) * 1_000) / 1_000.0);
         System.out.println("Capacity: " + capacity + "%" );
 
