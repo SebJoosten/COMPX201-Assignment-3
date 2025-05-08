@@ -1,5 +1,3 @@
-import java.util.List;
-
 /**
  * This is the standard hash table class with methods to handel one table
  * no Collision handling
@@ -8,13 +6,12 @@ public class StrHashTable {
 
     // A list to keep all the nodes
     private node[] table;
-    private int size;
-    private int numCollisions;
-    private int numElements;
     private int startingSize = 16;
     private double capacity = 0.8;
-    private boolean reHashDump = false;
 
+    // numElements tracks the total number of stored elements so insertions don't require recounting every time
+    // It's also updated during count() as a precaution to ensure accuracy—optional, but helps prevent drift
+    private int numElements;
 
 
     /**
@@ -24,15 +21,13 @@ public class StrHashTable {
     public StrHashTable() {
 
         table = new node[startingSize];
-        size = 0;
-        numCollisions = 0;
         numElements = 0;
 
     }
 
     /**
-     * Insert is a method used to add a value to the hash table
-     * There is no double handling
+     * Insert is a method used to add a value to the hash table.
+     * There is no double handling any collisions will be ignored
      * @param key - The key of your matched pair
      * @param value - The value to go with that key.
      */
@@ -42,23 +37,23 @@ public class StrHashTable {
 
             // Check if the table has space (capacity exceeds 80%)
             if ((double) numElements / table.length >= capacity) {
-                System.out.println("ERROR: Capacity exceeded");
-                reHash();  // This should increase the table size and rehash all elements
+                System.err.println("LOG: insert() Capacity exceeded. Resizing from " + table.length + " to " + (table.length * 2));
+                reHash();
             }
 
-            // Check again to make sure the key doesn’t exist after rehashing
-            if (contains(key)) {
-                System.out.println("ERROR: Key already exists");
-                System.out.println("**    Nothing added    **");
+            int index = hashFunction(key);
+
+            // If the spot is empty, add it
+            if (table[index] == null) {
+                table[index] = new node(key, value);
+                numElements++;
+                System.err.println("LOG: insert() Inserted \"" + key + "\" -> \"" + value + "\" at index " + index);
                 return;
             }
 
-            // Finally, insert the value
-            table[hashFunction(key)] = new node(key, value);
-            numElements++;
-        } else {
-            System.out.println("** ERROR: No key/value input **");
-            System.out.println("****     Nothing added     ****");
+            System.err.println((key == null || value == null)
+                    ? "ERROR: insert() received null key or value. Nothing inserted."
+                    : "ERROR: insert() Collision occurred. \"" + key + "\" -> \"" + value + "\" not inserted.");
         }
 
     }
@@ -69,25 +64,25 @@ public class StrHashTable {
      */
     public void delete (String k){
 
-        // Check k for input
-        if (k != null && contains(k)) {
+        // Check k is not null and check the table has an entry there
+        if (k != null && table[hashFunction(k)] != null) {
             table[hashFunction(k)] = null;
-            System.out.println("--> " + k + " Was successfully deleted");
+            System.err.println("LOG: delete() \"" + k + "\" was successfully deleted.");
             numElements--;
             return;
         }
 
-        // Error message if nothing done
-        System.out.println((k == null) ? "** ERROR: Input String Null  **"
-                                        : "**   ERROR: Key not found    **");
-        System.out.println("* delete()   Nothing Removed    *");
+        // Print error if "key" is null or was not found in the table
+        System.err.println((k == null)
+                ? "ERROR: delete() received null key. Nothing deleted."
+                : "ERROR: delete() \"" + k + "\" not found. Nothing deleted.");
 
     }
 
     /**
-     * This is the hashing function it will take in your key and give back an index
+     * Hashes a given key and returns a table index
      * @param k - The key you wish to hash
-     * @return - an int with the index associated with that key
+     * @return - an int with the index associated with that key DEFAULT = 0
      */
     private int hashFunction(String k){
 
@@ -95,176 +90,152 @@ public class StrHashTable {
         int hash = 0;
 
         if (k == null){
-            System.out.println("**    ERROR: No key input    **");
-            System.out.println("hashFunction()  Nothing to hash");
+            System.err.println("ERROR: hashFunction() received null key. Returning default hash.");
             return hash;
         }
 
-
+        // Combine character pairs into numeric values
         for (int i = 0; i < k.length(); i += 2) {
             char c1 = k.charAt(i);
-            // if char 2 is blank or out of bounds, make it 0
             char c2 = (i + 1 < k.length()) ? k.charAt(i + 1) : 0;
-
-            // Concatenate with shift a little faster than multiple?
             int pairValue = (c1 << 8) + c2;
             hash += pairValue;
         }
 
-        // Shift up 16 and XOR
-        int shifted = hash >> 16;   // Everything extra should fall off
-        hash = hash ^ shifted;
-        hash *= 31;                 // divide by prime
-        //System.out.println("hashFunction() Before mod Hash: " + hash);
-        hash %= table.length;       // Modulo
-
-        //System.out.println("hashFunction()  Hash: " + hash);
+        // Mix bits and constrain to table size
+        int shifted = hash >> 16;   // Shift right by 16 bits
+        hash = hash ^ shifted;      // XOR with shifted value
+        hash *= 31;                 // multiply by prime
+        hash %= table.length;       // Modulo to fit table size
 
         return hash;
     }
 
     /**
-     * This it to rehash the table and make it twice the size
-     * Then it till take the old table rehash the move the content
+     * Doubles the table size and rehashes all existing entries into the new table
      */
     private void reHash(){
 
+        // Backup the current table and create a new, larger one. reset numElements
         numElements = 0;
-
-        if(reHashDump){dump();}
-
-        // Set up temp table and new table doubles the size
         node[] temp = table;
         table = new node[table.length*2];
 
-        // Move all the content this will ignore doubles
+        // Rehash old values in to new table
         for(node n : temp){
             if(n != null){
                 insert(n.key, n.value);
             }
         }
 
-        if(reHashDump){dump();}
+        System.err.println("LOG: reHash() - Table size doubled and contents rehashed.");
 
     }
 
     /**
-     * This will return if a key has a node associated with it
-     * @param k - The key you're looking for
-     * @return - True if there is a node with that key and a value otherwise false
+     * Checks if the given key has an associated node with a value.
+     * @param k - The key to check for.
+     * @return True if the key exists and has a value, otherwise false.
      */
-    public boolean contains(String k){
+    public boolean contains(String k) {
 
-        if (k == null){
-            System.out.println("**    ERROR: No key input    **");
-            System.out.println("contains()  Nothing to look for");
+        if (k == null) {
+            System.err.println("ERROR: contains() received null key - Nothing to check");
             return false;
         }
 
-        return table[hashFunction(k)] != null && table[hashFunction(k)].getValue() != null;
-
+        // Get index and return true if occupied otherwise false
+        int index = hashFunction(k);
+        return table[index] != null && table[index].value != null;
     }
 
     /**
-     * Check the table contains a key and string then return the value
-     * @param k - the kay your looking for
-     * @return - The string associated with the value if it contains it
+     * Returns the value associated with the given key
+     * @param k - The key to search for
+     * @return - The value if found, otherwise null (don't like null returns)
      */
-    public String getString(String k){
+    public String getString(String k) {
 
-        if (k == null){
-            System.out.println("**    ERROR: No key input    **");
-            System.out.println("****    Nothing to get     ****");
+        if (k == null) {
+            System.err.println("ERROR: getString() received null key. Nothing to return.");
             return null;
         }
 
-        // Check if it's in the table and return value if true
-        if (contains(k)){
-            return table[hashFunction(k)].getValue();
+        if (contains(k)) {
+            return table[hashFunction(k)].value;
         }
 
-        System.out.println("ERROR: No such element -> " + k);
+        System.err.println("ERROR: getString() No such element -> " + k);
         return null;
-
     }
 
     /**
-     * This is to check if the table is empty
-     * @return true if empty false is not
+     * Checks if the table is empty
+     * @return true if empty, otherwise false
      */
-    public boolean isEmpty(){
-
-        // Re calculate num elements
+    public boolean isEmpty() {
         return count() == 0;
-
     }
 
     /**
-     * A super simple look to count the current occupied elements
-     * @return The number of elements stored
+     * Counts the number of occupied elements in the table
+     * @return the number of elements stored
      */
-    public int count(){
+    public int count() {
 
         int count = 0;
-        for(node t : table){
+        for (node t : table) {
             if (t != null) count++;
         }
+
+        // Update num elements to be safe
         numElements = count;
         return count;
 
     }
 
     /**
-     * Prints out all content of the hash table
+     * Prints all content of the hash table
      */
-    public void dump(){
+    public void dump() {
 
         int counter = 0;
-        for(node t : table){
+        for (node t : table) {
             if (t != null) {
+
                 counter++;
-                System.out.println(counter + ": " + t.toString());
+                System.out.println(counter + ": " + t);
+
             }
         }
 
     }
 
-
     //********************************** NODE **********************************
     /**
-     * This is the node class, and it used to keep the key and value pairs
+     * Node class for storing key-value pairs in the hash table
      */
     private static class node {
-        private String key; // The key associated with the value
-        private String value; // The value associated with the kay in the table
+        private String key;   // Key for the node
+        private String value; // Value associated with the key
 
         /**
-         * This will make a new node with the input values
+         * Creates a new node with the specified key and value
          * @param k - The key for this node
          * @param v - The value associated with it
          */
         public node(String k, String v){
+            // Just a double check to avoid storing nulls
+            if (k == null || v == null) {
+                System.err.println("ERROR: node() Key and value cannot be null. DEFAULT applied");
+            }
             key = (k == null)  ? " " : k;
-            value = (v==null) ? " " : v;
+            value = (v == null) ? " " : v;
         }
 
         /**
-         * @return The value stored in this node
-         */
-        public String getValue(){
-            return value;
-        }
-
-        /**
-         * @return The key for this node
-         */
-        public String getKey(){
-            return key;
-        }
-
-        /**
-         * To string override
-         * @return - a string formatted for printing
+         * Overrides toString() to return a formatted string for printing.
+         * @return A string representation of the key-value pair.
          */
         @Override
         public String toString(){

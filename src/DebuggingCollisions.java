@@ -4,34 +4,123 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * This is a debugging class used to abuse the hash table
+ * A debugging class designed to stress test a hash table with collision handling
+ * This simulates various insert/delete/get scenarios, including edge cases like nulls
+ * This has been used to validate the table consistency of 30 known values after 2000000 random values where added and removed
  */
 public class DebuggingCollisions {
 
     StrHashTableCollisions test = new StrHashTableCollisions();
     Random rand = new Random();
+    boolean the2000000Test = false;
 
-    // Used to store pairs of data
-    private record kvPAIR<K, V>(K key, V value) {}
+    // Used to store pairs of data (key-value)
+    public record kvPAIR<K, V>(K key, V value) {}
+
+    /**
+     * A utility class to store key - value pairs for later use
+     */
     public static class pairStorage<K, V> {
-        private List<kvPAIR<K, V>> pairData = new ArrayList<>(); // Using ArrayList instead of List for direct instantiation
 
+        // List of key - value pairs
+        private List<Debugging.kvPAIR<K, V>> pairData = new ArrayList<>();
+
+        /**
+         * Adds a key - value pair to the list
+         *
+         * @param key - The key to be added
+         * @param value - The value to be added
+         */
         public void addPair(K key, V value) {
-            kvPAIR<K, V> newPair = new kvPAIR<>(key, value);
+            Debugging.kvPAIR<K, V> newPair = new Debugging.kvPAIR<>(key, value);
             pairData.add(newPair);
         }
 
-
-        public kvPAIR<K,V> key(int index){
+        /**
+         * Retrieves the key-value pair at the specified index
+         *
+         * @param index - The index of the pair to retrieve
+         * @return - The key - value pair at the specified index
+         */
+        public Debugging.kvPAIR<K,V> key(int index){
             return pairData.get(index);
         }
     }
 
     /**
-     * Constructor
+     * Main method to execute debugging tasks and observe the behavior of the hash table
+     * @param args Command-line arguments (not used here)
      */
-    public DebuggingCollisions() {
+    public static void main(String[] args) {
+        DebuggingCollisions debug = new DebuggingCollisions();
 
+        System.out.println("----- Random Add Test (1000 entries) -----");
+        debug.randomAdds(1000);
+        debug.dump();
+
+        System.out.println("\n----- Add and Remove Test (1000 entries) -----");
+        debug.addRemoveRandom(1000);
+
+        System.out.println("\n----- Insert Random Length Strings Test (1000 entries) -----");
+        debug.insertRandomLengeth(1000);
+
+        System.out.println("\n----- Null Handling Test -----");
+        debug.nullCheck();
+
+        System.out.println("\n----- Random Remove Test (1000 attempts) -----");
+        debug.randomRemove(1000);
+
+
+        debug = new DebuggingCollisions();
+
+        // Add a standard set of 30 and do tests again
+        debug.test.insert("apple", "a fruit that keeps doctors away");
+        debug.test.insert("banana", "a yellow fruit that monkeys love");
+        debug.test.insert("cat", "a furry animal that purrs");
+        debug.test.insert("dog", "man's best friend");
+        debug.test.insert("elephant", "the largest land animal");
+        debug.test.insert("fish", "an aquatic creature with gills");
+        debug.test.insert("grape", "a small, round fruit often used to make wine");
+        debug.test.insert("honey", "a sweet substance produced by bees");
+        debug.test.insert("ice", "frozen water");
+        debug.test.insert("juice", "a drink made from fruits or vegetables");
+
+        debug.test.insert("kiwi", "a small, fuzzy fruit with green flesh");
+        debug.test.insert("lemon", "a sour, yellow citrus fruit");
+        debug.test.insert("monkey", "a playful primate");
+        debug.test.insert("notebook", "a book for writing notes");
+        debug.test.insert("orange", "a sweet, round citrus fruit");
+        debug.test.insert("pencil", "a tool for writing or drawing");
+        debug.test.insert("quilt", "a warm blanket made of fabric layers");
+        debug.test.insert("rose", "a fragrant flower, often red or pink");
+        debug.test.insert("sunflower", "a tall, yellow flower that follows the sun");
+        debug.test.insert("applepie", "a classic dessert made with apples and pastry");
+
+        debug.test.insert("bread", "a staple food made from flour, water, and yeast");
+        debug.test.insert("carrot", "an orange vegetable that grows underground");
+        debug.test.insert("dragonfly", "an insect with long wings that flies quickly");
+        debug.test.insert("elephantseal", "a large sea mammal with a trunk-like nose");
+        debug.test.insert("firefly", "a glowing insect found in warm climates");
+        debug.test.insert("grapefruit", "a citrus fruit that is sour and slightly bitter");
+        debug.test.insert("houseplant", "a plant that is kept indoors");
+        debug.test.insert("icecream", "a sweet frozen dessert");
+        debug.test.insert("jellyfish", "a marine animal with a gelatinous body");
+        debug.test.insert("kangaroo", "a large marsupial native to Australia");
+
+        System.out.println("\n----- Random Remove Test with standard set (1000 attempts) -----");
+        debug.randomRemove(1000);
+
+        System.out.println("\n----- Add and Remove Test with standard set (1000 entries) -----");
+        debug.addRemoveRandom(1000);
+
+        // Print and conform the standard set remain
+        debug.dump();
+
+        // This dose work but good luck
+        //debug.addRemoveRandom(20000000);
+
+        debug.dump();
+        // Nice
     }
 
     /**
@@ -46,13 +135,10 @@ public class DebuggingCollisions {
 
     }
 
-    public boolean contains(String key){
-        return test.contains(key);
-    }
-
     /**
-     * A method to add a bunch of random values them remove them ALL
-     * @param i - the number of elements to add and remove
+     * Adds 'i' number of random pairs, shuffles them, and then removes them from the table
+     * This method helps test it if the delete operation works correctly
+     * @param i The number of elements to add and remove
      */
     public void addRemoveRandom(int i){
 
@@ -68,29 +154,30 @@ public class DebuggingCollisions {
             test.insert(key, value);
         }
 
-        // Shuffle then remove from table
+        // Shuffle the pairs and remove them from the hash table
         int count = 0;
         Collections.shuffle(pairStorage.pairData);
-
         for (int j = 0; j < pairStorage.pairData.size(); j++) {
-            String key = pairStorage.pairData.get(j).key;
+            String key = pairStorage.pairData.get(j).key();
             if (!test.contains(key)) {
                 count++;
                 System.out.println("Failed: " + key);
             }
             System.out.println("Delete:  " + key);
             test.delete(key);
-
         }
-        pairStorage.pairData.clear();
 
+        // Clear list and print results
+        pairStorage.pairData.clear();
+        test.dump();
         System.out.println("There are " + count + " failed");
 
     }
 
     /**
-     * inserts i number of key and value pairs with random string lengths from 1-999
-     * @param i - The number of random strings to add
+     * Inserts 'i' random key-value pairs with random lengths of keys and values
+     * This method checks if the table handles variable lengths correctly
+     * @param i The number of random pairs to insert
      */
     public void insertRandomLengeth(int i){
 
@@ -98,6 +185,7 @@ public class DebuggingCollisions {
         String key,value;
         int count = 0;
 
+        // Insert 'i' random key-value pairs of random lengths and insert them in to the table
         for (int j=0;j<i;j++){
             key = getRandomString(rand.nextInt(999));
             value = getRandomString(rand.nextInt(999));
@@ -107,6 +195,7 @@ public class DebuggingCollisions {
             }
         }
 
+        // Print counter - accuracy might vary is double string generated
         System.out.println("There are " + count + " failed");
     }
 
@@ -120,8 +209,9 @@ public class DebuggingCollisions {
     }
 
     /**
-     * Randomly tries to remove random keys of length 1 - 999
-     * @param i The number of attempts
+     * Randomly removes keys from the table. The keys are randomly generated
+     * This method helps test the behavior of the delete operation
+     * @param i The number of attempts to delete random keys
      */
     public void randomRemove(int i){
         for (int j=0;j<i;j++){
@@ -129,18 +219,43 @@ public class DebuggingCollisions {
         }
     }
 
+    /**
+     * Delete pass through
+     * Used when this class is called externally as a pass-through
+     */
     public void dump(){
         test.dump();
     }
 
+    /**
+     * Get value pass through
+     * Used when this class is called externally as a pass-through
+     */
     public String getValues(String key){
         return test.getString(key);
     }
 
+    /**
+     * Delete pass through
+     * Used when this class is called externally as a pass-through
+     */
     public void delete(String key){
         test.delete(key);
     }
 
+    /**
+     * Contains pass through
+     * Used when this class is called externally as a pass-through
+     */
+    public boolean contains(String key){
+        return test.contains(key);
+    }
+
+    /**
+     * Sets the hash table instance for testing. This is useful for swapping different table implementations
+     * Used when this class is called externally as a pass-through
+     * @param table The StrHashTable instance to test
+     */
     public void insertTable(StrHashTableCollisions table){
         test = table;
     }
