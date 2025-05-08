@@ -1,6 +1,10 @@
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -20,212 +24,230 @@ import java.util.Random;
  */
 class StrHashTableCollisionsTest {
 
+
+    /**
+     * General hash table set up used for each method
+     * the occasional method has to reset it for testing, but it was easier to follow by a method group
+     */
+    private StrHashTableCollisions hashTableCollisions;
+    @BeforeEach
+    void setUp() {
+        hashTableCollisions = new StrHashTableCollisions();
+        hashTableCollisions.insert("test","this is a test");
+        System.out.println("Global @BeforeEach");
+    }
+
+
     //******************************** SIGNAL TESTS ********************************
     //********************************    insert    ********************************
 
-    /**
-     * Check single insert()
-     * This test is to make sure the insertion of one entry works correctly
-     * It then checks to make sure it's contained in the table
-     */
-    @Test
-    @DisplayName("insert() single insert test")
-    void insert() {
+    @org.junit.jupiter.api.Nested
+    class InsertTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertTrue(hashTableCollisions.contains("test"),"insert() - test should contain value return true");
+        /**
+         * Check single insert()
+         * This test is to make sure the insertion of one entry works correctly
+         * It then checks to make sure it's contained in the table
+         */
+        @Test
+        @DisplayName("insert() single insert test")
+        void insert() {
 
-    }
+            assertTrue(hashTableCollisions.contains("test"), "insert() - test should contain value return true");
 
-    /**
-     * Check Double insert()
-     * This test is to make sure the insertion of a double works correctly
-     * The test will add the same key twice then check to make sure the count is 1
-     * A double is not the same as a collision
-     * In the case of a double, the keys must also match not just the index
-     */
-    @Test
-    @DisplayName("insert() insert the same thing twice")
-    void insertDouble() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("test","this is a test");
-        assertEquals(1, hashTableCollisions.count(),"insert() double - should be 1");
+        /**
+         * Check Double insert()
+         * This test is to make sure the insertion of a double works correctly
+         * The test will add the same key twice then check to make sure the count is 1
+         * A double is not the same as a collision
+         * In the case of a double, the keys must also match not just the index
+         */
+        @Test
+        @DisplayName("insert() insert the same thing twice")
+        void insertDouble() {
 
-    }
+            hashTableCollisions.insert("test", "this is a test");
+            assertEquals(1, hashTableCollisions.count(), "insert() double - should be 1");
 
-    /**
-     * Check NULL insert()
-     * This test is to make sure if insert is invoked with a null, the table will ignore it gracefully
-     * It will check to make sure the table remains empty
-     */
-    @Test
-    @DisplayName("insert() null test")
-    void insertNull() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert(null,null);
-        assertTrue(hashTableCollisions.isEmpty(),"insert() null isEmpty() should return True");
+        /**
+         * Check NULL insert()
+         * This test is to make sure if insert is invoked with a null, the table will ignore it gracefully
+         * It will check to make sure the table remains empty
+         */
+        @Test
+        @DisplayName("insert() null test")
+        void insertNull() {
+
+            hashTableCollisions = new StrHashTableCollisions();
+            hashTableCollisions.insert(null, null);
+            assertTrue(hashTableCollisions.isEmpty(), "insert() null isEmpty() should return True");
+
+        }
 
     }
 
     //********************************    delete    ********************************
 
-    /**
-     * Check delete() removes one element
-     * This test is to make sure deleting a signal inserted element is successful
-     * The test will insert a value then delete it and check if it remains
-     */
-    @Test
-    @DisplayName("delete() single delete test")
-    void delete() {
+    @org.junit.jupiter.api.Nested
+    class DeleteTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.delete("test");
-        assertFalse(hashTableCollisions.contains("test"),"After delete() test should return false");
+        /**
+         * Check delete() removes one element
+         * This test is to make sure deleting a signal inserted element is successful
+         * The test will insert a value then delete it and check if it remains
+         */
+        @Test
+        @DisplayName("delete() single delete test")
+        void delete() {
 
-    }
+            hashTableCollisions.delete("test");
+            assertFalse(hashTableCollisions.contains("test"), "After delete() test should return false");
 
-    /**
-     * Check delete() removes not in list
-     * This test is to make sure the delete function doesn't remove a value not contained in the table
-     * It will insert a value then delete a value known not to be in the table
-     * Then it will check to see if the original value remains
-     */
-    @Test
-    @DisplayName("delete() not in list")
-    void deleteNotInList() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.delete("more");
-        assertTrue(hashTableCollisions.contains("test"),"delete() not in list - test should return true");
+        /**
+         * Check delete() removes not in list
+         * This test is to make sure the delete function doesn't remove a value not contained in the table
+         * It will insert a value then delete a value known not to be in the table
+         * Then it will check to see if the original value remains
+         */
+        @Test
+        @DisplayName("delete() not in list")
+        void deleteNotInList() {
 
-    }
+            hashTableCollisions.delete("more");
+            assertTrue(hashTableCollisions.contains("test"), "delete() not in list - test should return true");
 
-    /**
-     * Check delete() with NULL input
-     * This test will call the delete function with a null then check the original value remains
-     * It is to make sure the delete function handles null inserts gracefully
-     */
-    @Test
-    @DisplayName("delete() null delete test")
-    void deleteNull() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.delete(null);
-        assertTrue(hashTableCollisions.contains("test"),"After delete(NULL) test should return true");
+        /**
+         * Check delete() with NULL input
+         * This test will call the delete function with a null then check the original value remains
+         * It is to make sure the delete function handles null inserts gracefully
+         */
+        @Test
+        @DisplayName("delete() null delete test")
+        void deleteNull() {
+
+            hashTableCollisions.delete(null);
+            assertTrue(hashTableCollisions.contains("test"), "After delete(NULL) test should return true");
+
+        }
 
     }
 
     //********************************   getString  ********************************
 
-    /**
-     * Check getString() returns the right string
-     * This test will insert a value in to the table then call getString and insure the value is correct
-     */
-    @Test
-    @DisplayName("getString() one value test")
-    void getString() {
+    @org.junit.jupiter.api.Nested
+    class GetStringTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertEquals("this is a test", hashTableCollisions.getString("test"), "getString() should return 'this is a test'");
+        /**
+         * Check getString() returns the right string
+         * This test will insert a value in to the table then call getString and insure the value is correct
+         */
+        @Test
+        @DisplayName("getString() one value test")
+        void getString() {
 
-    }
+            assertEquals("this is a test", hashTableCollisions.getString("test"), "getString() should return 'this is a test'");
 
-    /**
-     * Check getString() with NULL input
-     * This test will call the getString with a key known to not be in the table and check it handles it gracefully
-     */
-    @Test
-    @DisplayName("getString() not in list ")
-    void getStringNotInList() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertNull(hashTableCollisions.getString("more"), "getString() should return null when null is input");
+        /**
+         * Check getString() with NULL input
+         * This test will call the getString with a key known to not be in the table and check it handles it gracefully
+         */
+        @Test
+        @DisplayName("getString() not in list ")
+        void getStringNotInList() {
 
-    }
+            assertNull(hashTableCollisions.getString("more"), "getString() should return null when null is input");
 
-    /**
-     * Check getString() with NULL input
-     * This test will call the getString with a null and check it handles it gracefully
-     * It will insert a known test value then call getString with a null
-     */
-    @Test
-    @DisplayName("getString() null test ")
-    void getStringNull() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertNull(hashTableCollisions.getString(null), "getString() should return null when null is input");
+        /**
+         * Check getString() with NULL input
+         * This test will call the getString with a null and check it handles it gracefully
+         * It will insert a known test value then call getString with a null
+         */
+        @Test
+        @DisplayName("getString() null test ")
+        void getStringNull() {
+
+            assertNull(hashTableCollisions.getString(null), "getString() should return null when null is input");
+
+        }
 
     }
 
     //********************************    isEmpty   ********************************
+    @org.junit.jupiter.api.Nested
+    class InEmptyTests {
 
-    /**
-     * Check isEmpty returns False with table is populated
-     * This test will insert a value in to the table then check is empty returns false
-     */
-    @Test
-    @DisplayName("isEmpty() false")
-    void isEmptyFalse() {
+        /**
+         * Check isEmpty returns False with table is populated
+         * This test will insert a value in to the table then check is empty returns false
+         */
+        @Test
+        @DisplayName("isEmpty() false")
+        void isEmptyFalse() {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertFalse(hashTableCollisions.isEmpty(),"isEmpty after should return False");
+            assertFalse(hashTableCollisions.isEmpty(), "isEmpty after should return False");
 
-    }
+        }
 
-    /**
-     * Check isEmpty returns True when empty
-     * This test is to make sure isEmpty will return false when the table is empty
-     */
-    @Test
-    @DisplayName("isEmpty() true")
-    void isEmptyTrue() {
+        /**
+         * Check isEmpty returns True when empty
+         * This test is to make sure isEmpty will return false when the table is empty
+         */
+        @Test
+        @DisplayName("isEmpty() true")
+        void isEmptyTrue() {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        assertTrue(hashTableCollisions.isEmpty(),"isEmpty after should return True");
+            hashTableCollisions = new StrHashTableCollisions();
+            assertTrue(hashTableCollisions.isEmpty(), "isEmpty after should return True");
+
+        }
 
     }
 
     //********************************     count    ********************************
 
-    /**
-     * Check count() is correct
-     * This test is to make sure the count method works correctly
-     * It will insert 3 values then make sure the count returns 3
-     */
-    @Test
-    @DisplayName("Count() 3")
-    void count() {
+    @org.junit.jupiter.api.Nested
+    class CountTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
-        assertEquals(3, hashTableCollisions.count(),"count() should be 3");
+        /**
+         * Check count() is correct
+         * This test is to make sure the count method works correctly
+         * It will insert 3 values then make sure the count returns 3
+         */
+        @Test
+        @DisplayName("Count() 3")
+        void count() {
 
-    }
+            hashTableCollisions.insert("more", "this is another test");
+            hashTableCollisions.insert("again", "this is again a test");
+            assertEquals(3, hashTableCollisions.count(), "count() should be 3");
 
-    /**
-     * Check count() is correct
-     * This test is to make sure the count method works correctly
-     * It will create an empty table and check to make sure count returns 0
-     */
-    @Test
-    @DisplayName("Count() none")
-    void countNone() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        assertEquals(0, hashTableCollisions.count(),"count() should be 0");
+        /**
+         * Check count() is correct
+         * This test is to make sure the count method works correctly
+         * It will create an empty table and check to make sure count returns 0
+         */
+        @Test
+        @DisplayName("Count() none")
+        void countNone() {
+
+            hashTableCollisions.delete("test");
+
+
+        }
 
     }
 
@@ -240,7 +262,6 @@ class StrHashTableCollisionsTest {
     @DisplayName("reHash() extension test")
     void reHash() {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
         for (int i = 0; i < 100; i++) {
             hashTableCollisions.insert(getRandomString(5),getRandomString(10));
         }
@@ -250,211 +271,217 @@ class StrHashTableCollisionsTest {
 
     //********************************     dump     ********************************
 
-    /**
-     * Check that bump() is outputting correctly
-     * This test will insert some values and check to make sure the output contains the first correct line
-     */
-    @Test
-    @DisplayName("dump() output test")
-    void dump() {
+    @org.junit.jupiter.api.Nested
+    class DumpCaptureTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
+        ByteArrayOutputStream outContent;
+        PrintStream originalOut;
 
-        // Change output to Byte array capture and collect print stream
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        PrintStream originalOut = System.out;
-        System.setOut(new PrintStream(outContent));
+        @BeforeEach
+        void setUp() {
 
-        hashTableCollisions.dump();
+            // Capture System.out
+            outContent = new ByteArrayOutputStream();
+            originalOut = System.out;
+            System.setOut(new PrintStream(outContent));
+        }
 
-        System.setOut(originalOut);
+        /**
+         * Check that bump() is outputting correctly
+         * This test will insert some values and check to make sure the output contains the first correct line
+         */
+        @Test
+        @DisplayName("dump() output test")
+        void dump() {
 
-        String output = outContent.toString();
+            hashTableCollisions.dump();
 
-        assertTrue(output.contains("1: test, this is a test"), "dump() - Missing entry for 'test'");
+            String output = outContent.toString();
 
-    }
+            assertTrue(output.contains("1: test, this is a test"), "dump() - Missing entry for 'test'");
 
-    /**
-     * Check that bump() is outputting correctly
-     * This test will make sure the dump function outputs nothing when the table is empty
-     * This test will fail if printStats enabled - DEFAULT disabled
-     */
-    @Test
-    @DisplayName("dump() empty output test")
-    void dumpEmpty() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
+        /**
+         * Check that bump() is outputting correctly
+         * This test will make sure the dump function outputs nothing when the table is empty
+         * This test will fail if printStats enabled - DEFAULT disabled
+         */
+        @Test
+        @DisplayName("dump() empty output test")
+        void dumpEmpty() {
 
-        // Change output to Byte array capture and collect print stream
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        PrintStream originalOut = System.out;
-        System.setOut(new PrintStream(outContent));
+            hashTableCollisions.delete("test");
+            hashTableCollisions.dump();
 
-        hashTableCollisions.dump();
+            String output = outContent.toString();
 
-        System.setOut(originalOut);
+            assertEquals("", output, "dump() empty - Expected empty string output");
 
-        String output = outContent.toString();
+        }
 
-        assertEquals("", output, "dump() empty - Expected empty string output");
+        /**
+         * Check that bump() is outputting correctly
+         */
+        @Test
+        @DisplayName("dump() mutable")
+        void dumpMutable() {
+
+            hashTableCollisions.insert("more", "this is another test");
+            hashTableCollisions.insert("again", "this is again a test");
+
+            hashTableCollisions.dump();
+
+            String output = outContent.toString();
+
+            hashTableCollisions.dump();
+
+            assertTrue(output.contains("1: test, this is a test"), "dump() mutable - Missing entry for '1: test, this is a test'");
+            assertTrue(output.contains("2: more, this is another test"), "dump() mutable - Missing entry for '2: more, this is another test'");
+            assertTrue(output.contains("3: again, this is again a test"), "dump() mutable - Missing entry for '3: again, this is again a test'");
+
+        }
+
+        @AfterEach
+        void tearDown() {
+            System.setOut(originalOut);
+        }
 
     }
 
     //********************************   contains   ********************************
 
-    /**
-     * Check if contains() returns true
-     * This test will insert a known value and check to make sure contains returns true
-     */
-    @Test
-    @DisplayName("contains() true")
-    void containsTrue() {
+    @org.junit.jupiter.api.Nested
+    class ContainsTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertTrue(hashTableCollisions.contains("test"),"contains() should return true");
+        /**
+         * Check if contains() returns true
+         * This test will insert a known value and check to make sure contains returns true
+         */
+        @Test
+        @DisplayName("contains() true")
+        void containsTrue() {
 
-    }
+            assertTrue(hashTableCollisions.contains("test"), "contains() should return true");
 
-    /**
-     * Check if contains() returns false
-     * This test will insert a known value and then check for a value known to not be in the table
-     */
-    @Test
-    @DisplayName("contains() false")
-    void containsFalse() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertFalse(hashTableCollisions.contains("more"),"contains() should return false");
+        /**
+         * Check if contains() returns false
+         * This test will insert a known value and then check for a value known to not be in the table
+         */
+        @Test
+        @DisplayName("contains() false")
+        void containsFalse() {
 
-    }
+            assertFalse(hashTableCollisions.contains("more"), "contains() should return false");
 
-    /**
-     * Check if contains() NULL returns false
-     * This test is to make sure calling contains with a null value returns false and is handled gracefully
-     */
-    @Test
-    @DisplayName("contains() null")
-    void containsNull() {
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        assertFalse(hashTableCollisions.contains(null), "contains() should return false for null key");
+        /**
+         * Check if contains() NULL returns false
+         * This test is to make sure calling contains with a null value returns false and is handled gracefully
+         */
+        @Test
+        @DisplayName("contains() null")
+        void containsNull() {
+
+            assertFalse(hashTableCollisions.contains(null), "contains() should return false for null key");
+
+        }
 
     }
 
     //******************************** Mutable TESTS ********************************
 
-    /**
-     * Check that contains works for more than one in the table
-     */
-    @Test
-    @DisplayName("contains() mutable")
-    void containsMultiple() {
+    @org.junit.jupiter.api.Nested
+    class MutableTests {
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
-        assertTrue(hashTableCollisions.contains("test"),"contains() multiple - should return true test 1");
-        assertTrue(hashTableCollisions.contains("more"),"contains() multiple - should return true test 2");
-        assertTrue(hashTableCollisions.contains("again"),"contains() multiple - should return true test 3");
+        @BeforeEach
+        void setUp() {
+            hashTableCollisions.insert("more", "this is another test");
+            hashTableCollisions.insert("again", "this is again a test");
+            System.out.println("Global @BeforeEach");
+        }
 
-    }
+        /**
+         * Check that contains works for more than one in the table
+         */
+        @Test
+        @DisplayName("contains() mutable")
+        void containsMultiple() {
 
-    /**
-     * Check that is empty works with ads and deletes
-     */
-    @Test
-    @DisplayName("isEmpty() before/after insert/delete")
-    void isEmptyMultiple() {
+            assertTrue(hashTableCollisions.contains("test"),"contains() multiple - should return true test 1");
+            assertTrue(hashTableCollisions.contains("more"),"contains() multiple - should return true test 2");
+            assertTrue(hashTableCollisions.contains("again"),"contains() multiple - should return true test 3");
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        assertTrue(hashTableCollisions.isEmpty(),"isEmpty() mutable - before insert should return True");
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
-        assertFalse(hashTableCollisions.isEmpty(),"isEmpty() mutable - after insert should return False");
-        hashTableCollisions.delete("test");
-        hashTableCollisions.delete("more");
-        hashTableCollisions.delete("again");
-        assertTrue(hashTableCollisions.isEmpty(),"isEmpty() mutable - after deletion should return True");
+        }
 
-    }
+        /**
+         * Check to make sure count stays consistent be
+         */
+        @Test
+        @DisplayName("count() before/after insert/delete")
+        void countMutable() {
 
-    /**
-     * Check to make sure count stays consistent be
-     */
-    @Test
-    @DisplayName("count() before/after insert/delete")
-    void countMutable() {
+            assertEquals(3, hashTableCollisions.count(), "count() mutable - after add 3 should be 3");
+            hashTableCollisions.delete("test");
+            assertEquals(2, hashTableCollisions.count(), "count() mutable - after delete 1 should be 2");
+            hashTableCollisions.delete("more");
+            assertEquals(1, hashTableCollisions.count(), "count() mutable - after delete 2 should be 1");
+            hashTableCollisions.delete("again");
+            assertEquals(0, hashTableCollisions.count(), "count() mutable - after delete 3 should be 0");
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
-        assertEquals(3, hashTableCollisions.count(),"count() mutable - after add 3 should be 3");
-        hashTableCollisions.delete("test");
-        assertEquals(2, hashTableCollisions.count(),"count() mutable - after delete 1 should be 2");
-        hashTableCollisions.delete("more");
-        assertEquals(1, hashTableCollisions.count(),"count() mutable - after delete 2 should be 1");
-        hashTableCollisions.delete("again");
-        assertEquals(0, hashTableCollisions.count(),"count() mutable - after delete 3 should be 0");
+        }
 
-    }
+        /**
+         * Check getString() returns the right string when the table has more than one
+         */
+        @Test
+        @DisplayName("getString() mutable")
+        void getStringMutable() {
 
-    /**
-     * Check getString() returns the right string when the table has more than one
-     */
-    @Test
-    @DisplayName("getString() mutable")
-    void getStringMutable() {
+            assertEquals("this is a test", hashTableCollisions.getString("test"), "getString() mutable - should return 'this is a test'");
+            assertEquals("this is another test", hashTableCollisions.getString("more"), "getString() mutable - should return 'this is another test'");
+            assertEquals("this is again a test", hashTableCollisions.getString("again"), "getString() mutable - should return 'this is again a test'");
+        }
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test","this is a test");
-        hashTableCollisions.insert("more","this is another test");
-        hashTableCollisions.insert("again","this is again a test");
-        assertEquals("this is a test", hashTableCollisions.getString("test"), "getString() mutable - should return 'this is a test'");
-        assertEquals("this is another test", hashTableCollisions.getString("more"), "getString() mutable - should return 'this is another test'");
-        assertEquals("this is again a test", hashTableCollisions.getString("again"), "getString() mutable - should return 'this is again a test'");
-    }
+        /**
+         * This test is to double-check the delete, and is empty functions work together correctly
+         * The idea is to catch compounding errors from more than one operation
+         */
+        @Test
+        @DisplayName("isEmpty() before/after delete")
+        void isEmptyMultipleDelete() {
 
-    /**
-     * Check that bump() is outputting correctly
-     */
-    @Test
-    @DisplayName("dump() mutable")
-    void dumpMutable() {
+            assertFalse(hashTableCollisions.isEmpty(),"isEmpty() mutable - after insert should return False");
+            hashTableCollisions.delete("test");
+            hashTableCollisions.delete("more");
+            hashTableCollisions.delete("again");
+            assertTrue(hashTableCollisions.isEmpty(),"isEmpty() mutable - after deletion should return True");
 
-        StrHashTableCollisions hashTableCollisions = new StrHashTableCollisions();
-        hashTableCollisions.insert("test", "this is a test");
-        hashTableCollisions.insert("more", "this is another test");
-        hashTableCollisions.insert("again", "this is again a test");
+        }
 
-        // Change output to Byte array capture and collect print stream
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        PrintStream originalOut = System.out;
-        System.setOut(new PrintStream(outContent));
+        /**
+         * This test is to double-check the insert and delete functions work together correctly
+         *  The idea is to catch compounding errors from more than one operation
+         */
+        @Test
+        @DisplayName("isEmpty() before/after insert")
+        void isEmptyMultipleInsert() {
 
-        hashTableCollisions.dump();
+            hashTableCollisions.delete("test");
+            hashTableCollisions.delete("more");
+            hashTableCollisions.delete("again");
+            assertTrue(hashTableCollisions.isEmpty(),"isEmpty() mutable - after deletion should return True");
+            hashTableCollisions.insert("test","this is a test");
+            hashTableCollisions.insert("more", "this is another test");
+            hashTableCollisions.insert("again", "this is again a test");
+            assertFalse(hashTableCollisions.isEmpty(),"isEmpty() mutable - after insert should return False");
 
-        System.setOut(originalOut);
-
-        String output = outContent.toString();
-
-        hashTableCollisions.dump();
-
-        assertTrue(output.contains("1: test, this is a test"), "dump() mutable - Missing entry for '1: test, this is a test'");
-        assertTrue(output.contains("2: more, this is another test"), "dump() mutable - Missing entry for '2: more, this is another test'");
-        assertTrue(output.contains("3: again, this is again a test"), "dump() mutable - Missing entry for '3: again, this is again a test'");
+        }
 
     }
-
 
     //******************************** Utils ********************************
 

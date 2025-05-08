@@ -312,23 +312,15 @@ public class StrHashTableCollisions {
 
         // Start counter and work way through every item in the current table
         int counter = 1;
-        int index = 0;
         for(StrHashTableCollisions.node t : table){
 
-            // If t has a node in it
-            if (t != null) {
-                System.out.println(counter + ": " + t);
+            // While a node is not null, traverse down the list
+            node temp = t;
+            while (temp != null) {
+                System.out.println(counter + ": " + temp.toString());
+                temp = temp.next;
                 counter++;
-
-                // While next is not null, keep printing
-                node temp = t;
-                while (temp.next != null) {
-                    System.out.println(counter + ": " + t);
-                    temp = temp.next;
-                    counter++;
-                }
             }
-            index++;
         }
 
         if(printStats) {

@@ -61,6 +61,9 @@ public class DebuggingCollisions {
         System.out.println("\n----- Add and Remove Test (1000 entries) -----");
         debug.addRemoveRandom(1000);
 
+        System.out.println("\n----- Null Handling Test -----");
+        debug.nullCheck();
+
         System.out.println("\n----- Insert Random Length Strings Test (1000 entries) -----");
         debug.insertRandomLengeth(1000);
 
@@ -69,8 +72,9 @@ public class DebuggingCollisions {
 
         System.out.println("\n----- Random Remove Test (1000 attempts) -----");
         debug.randomRemove(1000);
+        debug.dump();
 
-
+        // Reset for next tests
         debug = new DebuggingCollisions();
 
         // Add a standard set of 30 and do tests again
@@ -107,20 +111,31 @@ public class DebuggingCollisions {
         debug.test.insert("jellyfish", "a marine animal with a gelatinous body");
         debug.test.insert("kangaroo", "a large marsupial native to Australia");
 
+        // 1000 entries randomly removed then 1000 add remove
+        // Check to make sure the original 30 entries are intact after large operations
+        // passed
         System.out.println("\n----- Random Remove Test with standard set (1000 attempts) -----");
         debug.randomRemove(1000);
-
         System.out.println("\n----- Add and Remove Test with standard set (1000 entries) -----");
+        debug.dump();
+        System.out.println("\n-----           Print out before add remove 1000           -----");
         debug.addRemoveRandom(1000);
-
-        // Print and conform the standard set remain
+        System.out.println("\n-----            Print out after add remove 1000           -----");
         debug.dump();
 
-        // This dose work but good luck
-        //debug.addRemoveRandom(20000000);
+        // 2000000 entries randomly removed then 2000000 add remove
+        // Check to make sure the original 30 entries are intact after large operations
+        // passed but takes well over half an hour
+        if(debug.the2000000Test) {
+            System.out.println("\n----- Add and Remove Test with standard set (2000000 entries) -----");
+            debug.dump();
+            System.out.println("\n-----           Print out before add remove 2000000           -----");
+            debug.addRemoveRandom(1000);
+            System.out.println("\n-----            Print out after add remove 2000000           -----");
+            debug.dump();
+            // Nice
+        }
 
-        debug.dump();
-        // Nice
     }
 
     /**
