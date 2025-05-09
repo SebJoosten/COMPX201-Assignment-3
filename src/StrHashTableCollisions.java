@@ -30,7 +30,13 @@ public class StrHashTableCollisions {
      */
     public void insert(String key, String value) {
 
+
+
         if (key != null && value != null) {
+            if (key.isEmpty() || value.isEmpty()) {
+                System.err.println("ERROR: insert() Key or value is empty string - Nothing inserted");
+                return;
+            }
 
             // Check if the table has space (capacity exceeds "capacity")
             if ((double) numElements / table.length >= capacity) {
@@ -80,7 +86,7 @@ public class StrHashTableCollisions {
             return;
         }
 
-        // Get hash before Normalizing key > Grab node at index > set current and prev
+        // Get hash > Grab node at index > set current and prev
         int hash = hashFunction(k);
         node current = table[hash];
         node prev = null;
@@ -93,7 +99,7 @@ public class StrHashTableCollisions {
             // Traverse linked list at this hash index
             while (current != null) {
 
-                // Normalize and compare the current node's key to the target key
+                // compare the current node's key to the target key
                 if (current.key.equals(k)) {
                     numElements--;
 
@@ -159,7 +165,7 @@ public class StrHashTableCollisions {
         int shifted = hash >> 16;
         hash = hash ^ shifted;
         hash *= 31;
-        hash %= table.length;
+        hash = Math.abs(hash) % table.length;
 
         return hash;
 
@@ -219,7 +225,7 @@ public class StrHashTableCollisions {
             return false;
         }
 
-        // Get hash before normalizing key
+        // Get hash
         int hash = hashFunction(k);
         node current = table[hash];
 
@@ -249,7 +255,7 @@ public class StrHashTableCollisions {
             return null;
         }
 
-        // Get hash before normalizing key
+        // Get hash before
         int hash = hashFunction(k );
         node current = table[hash];
 

@@ -1,11 +1,8 @@
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Random;
@@ -13,7 +10,7 @@ import java.util.Random;
 /**
  * Unit tests for the StrHashTableCollisions class.
  *
- * These tests verify baseline functionality of all public methods,
+ * These tests verify the baseline functionality of all public methods,
  * including insertion, deletion, contains, and null handling.
  * Boolean-returning methods are checked for correct behavior.
  *
@@ -34,9 +31,7 @@ class StrHashTableCollisionsTest {
     void setUp() {
         hashTableCollisions = new StrHashTableCollisions();
         hashTableCollisions.insert("test","this is a test");
-        System.out.println("Global @BeforeEach");
     }
-
 
     //******************************** SIGNAL TESTS ********************************
     //********************************    insert    ********************************
@@ -50,7 +45,7 @@ class StrHashTableCollisionsTest {
          * It then checks to make sure it's contained in the table
          */
         @Test
-        @DisplayName("insert() single insert test")
+        @DisplayName("insert() Single insert test")
         void insert() {
 
             assertTrue(hashTableCollisions.contains("test"), "insert() - test should contain value return true");
@@ -65,7 +60,7 @@ class StrHashTableCollisionsTest {
          * In the case of a double, the keys must also match not just the index
          */
         @Test
-        @DisplayName("insert() insert the same thing twice")
+        @DisplayName("insert() Insert the same thing twice")
         void insertDouble() {
 
             hashTableCollisions.insert("test", "this is a test");
@@ -79,12 +74,42 @@ class StrHashTableCollisionsTest {
          * It will check to make sure the table remains empty
          */
         @Test
-        @DisplayName("insert() null test")
+        @DisplayName("insert() Null test")
         void insertNull() {
 
             hashTableCollisions = new StrHashTableCollisions();
             hashTableCollisions.insert(null, null);
             assertTrue(hashTableCollisions.isEmpty(), "insert() null isEmpty() should return True");
+
+        }
+
+        /**
+         * Check missing key insert()
+         * This test is to make sure if insert is invoked with an empty, the table will ignore it gracefully
+         * It will check to make sure the table remains with 1 entry and Key == "" is not entered
+         */
+        @Test
+        @DisplayName("insert() Missing key test")
+        void insertMissingKey() {
+
+            hashTableCollisions.insert("", "Missing key test");
+            assertFalse(hashTableCollisions.contains(""), "insert() missing key contains nothing should return False");
+            assertEquals(1, hashTableCollisions.count(), "insert() missing key should return 1 not 2");
+
+        }
+
+        /**
+         * Check missing value insert()
+         * This test is to make sure if insert is invoked with an empty value, the table will ignore it gracefully
+         * It will check to make sure the table remains with 1 entry and value == "" is not entered
+         */
+        @Test
+        @DisplayName("insert() Missing value test")
+        void insertMissingValue() {
+
+            hashTableCollisions.insert("testing", "");
+            assertFalse(hashTableCollisions.contains(""), "insert() missing key contains nothing should return False");
+            assertEquals(1, hashTableCollisions.count(), "insert() missing value should return 1 not 2");
 
         }
 
@@ -265,7 +290,7 @@ class StrHashTableCollisionsTest {
         for (int i = 0; i < 100; i++) {
             hashTableCollisions.insert(getRandomString(5),getRandomString(10));
         }
-        assertTrue(hashTableCollisions.count() > 16,"Count should be grater then 16");
+        assertTrue(hashTableCollisions.count() > 16,"reHash() extension test - Count should be grater then 16");
 
     }
 
@@ -277,6 +302,7 @@ class StrHashTableCollisionsTest {
         ByteArrayOutputStream outContent;
         PrintStream originalOut;
 
+        // Set up the capture of the output
         @BeforeEach
         void setUp() {
 
@@ -342,6 +368,7 @@ class StrHashTableCollisionsTest {
 
         }
 
+        // Reset output capture
         @AfterEach
         void tearDown() {
             System.setOut(originalOut);
@@ -397,11 +424,11 @@ class StrHashTableCollisionsTest {
     @org.junit.jupiter.api.Nested
     class MutableTests {
 
+        // This just adds some more values in on top of the normal test value before Mutable tests
         @BeforeEach
         void setUp() {
             hashTableCollisions.insert("more", "this is another test");
             hashTableCollisions.insert("again", "this is again a test");
-            System.out.println("Global @BeforeEach");
         }
 
         /**
@@ -479,6 +506,99 @@ class StrHashTableCollisionsTest {
             hashTableCollisions.insert("again", "this is again a test");
             assertFalse(hashTableCollisions.isEmpty(),"isEmpty() mutable - after insert should return False");
 
+        }
+
+        /**
+         * This is to test special characters in keys
+         * First it will insert the content of the array below then validate
+         * It will then run a delete test to make sure they are removed correctly
+         */
+        @org.junit.jupiter.api.Nested
+        class specialCharactersTests {
+            String[] specialKeys;
+
+            // Set up and insert the array of special strings on top of the initial 3
+            @BeforeEach
+            void setUp() {
+                specialKeys = new String[]{
+                        "key with spaces", // spaces
+                        "key-with-hyphens", // dash
+                        "key_with_underscores", // underscore
+                        "key.with.dots", // dots
+                        "key@with!special#chars$%^&*()",
+                        "()[{}]<>",// brackets
+                        "←↑→↓↔⇧",// arrows
+                        "£€¥₩₹₽", // currency
+                        "😀😂🔥👍",// emojis
+                        "☃",            // the show man
+                        "αβγδε", // Other languages and special characters including a right-to-left language
+                        "™©®✓",
+                        "𝔘𝔫𝔦𝔠𝔬𝔡𝔢",
+                        "零一二三",
+                        "éçñø",
+                        "こんにちは",
+                        "שָׁלוֹם"
+
+                };
+
+                // Add all the special entries to the hash table
+                for (int i = 0; i < specialKeys.length; i++) {
+                    hashTableCollisions.insert(specialKeys[i], "value" + i);
+                }
+
+            }
+
+            /**
+             * Test to validate the insertion of all the special character strings
+             * It then will check the initial 3 entries are intact
+             * This also validates contains with special characters
+             * This test also highlighted the possibility of a negative hash result and has been patched
+             */
+            @Test
+            @DisplayName("insert() Special characters in keys")
+            void insertSpecialKeys() {
+
+                // Check the special entries are there
+                for (int i = 0; i < specialKeys.length; i++) {
+                    assertTrue(hashTableCollisions.contains(specialKeys[i]), "insert() Special - should contain key with special characters: " + specialKeys[i]);
+                    assertEquals("value" + i, hashTableCollisions.getString(specialKeys[i]), "insert() Special - should return correct value for special key: " + specialKeys[i]);
+                }
+
+                // Prints the table for manual validation
+                hashTableCollisions.dump();
+
+                // Check the original 3 are intact and count
+                assertEquals(20, hashTableCollisions.count(), "insert() Special - count should be 20");
+                assertTrue(hashTableCollisions.contains("test"),"insert() Special - should return true test 1");
+                assertTrue(hashTableCollisions.contains("more"),"insert() Special - should return true test 2");
+                assertTrue(hashTableCollisions.contains("again"),"insert() Special - should return true test 3");
+
+                }
+
+            /**
+             * This tests it to make sure the delete functions handle the special characters
+             * It will remove all the special character strings and validate they have been removed
+             * It then will check the initial 3 entries are intact
+             */
+            @Test
+            @DisplayName("delete() Special characters in keys")
+            void DeleteSpecialKeys() {
+
+                // Check the special entries are there
+                for (String specialKey : specialKeys) {
+                    hashTableCollisions.delete(specialKey);
+                    assertFalse(hashTableCollisions.contains(specialKey), "delete() Special - should contain key with special characters: " + specialKey);
+                }
+
+                // Prints the table for manual validation
+                hashTableCollisions.dump();
+
+                // Check the original 3 are intact and count
+                assertEquals(3, hashTableCollisions.count(), "delete() Special - count should be 3");
+                assertTrue(hashTableCollisions.contains("test"), "delete() Special - should return true test 1");
+                assertTrue(hashTableCollisions.contains("more"), "delete() Special - should return true test 2");
+                assertTrue(hashTableCollisions.contains("again"), "delete() Special - should return true test 3");
+            }
         }
 
     }
